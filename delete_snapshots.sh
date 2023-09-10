@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Set the AWS region and your AWS CLI profile if needed
 AWS_REGION="us-east-1"
 AWS_PROFILE="your-profile-name"
