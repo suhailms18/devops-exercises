@@ -1,18 +1,7 @@
 import boto3
 from tabulate import tabulate
 
-# Fetch AMIs with the name within the specified region
-def fetch_amis_with_name(ec2_client, ami_name, region='your-region'):
-    response = ec2_client.describe_images(
-        Filters=[
-            {'Name': 'name', 'Values': [ami_name]},
-            {'Name': 'state', 'Values': ['available']}
-        ]
-    )
-    return response['Images']
-
-# Fetch all EC2 instance IDs and respective AMI IDs
-def fetch_instance_amis(ec2_client, region='your-region'):
+def fetch_instance_amis(ec2_client, region='us-east-1'):
     response = ec2_client.describe_instances()
     instances = response['Reservations']
 
@@ -25,31 +14,30 @@ def fetch_instance_amis(ec2_client, region='your-region'):
 
     return instance_amis
 
+def fetch_ami_name(ec2_client, ami_id, region='us-east-1'):
+    response = ec2_client.describe_images(ImageIds=[ami_id])
+    ami_name = response['Images'][0]['Name'] if response['Images'] else None
+    return ami_name
+
 def main():
-    aws_region = 'your-region'        # 'us-east-1'
-    ami_name_to_search = 'amzn-ami*'  # Amazon Linux 1 AMI name
+    aws_region = 'us-east-1'
 
     # Initialize AWS clients
     ec2_client = boto3.client('ec2', region_name=aws_region)
 
-    # Fetch all AMIs in us-east-1 with the specified name in the Array
-    array_1 = fetch_amis_with_name(ec2_client, ami_name_to_search)
+    # Fetch all EC2 instance IDs and respective AMI IDs
+    array_1 = fetch_instance_amis(ec2_client)
 
-    # Store all EC2 instance IDs and respective AMI IDs in the Array
-    array_2 = fetch_instance_amis(ec2_client)
+    # Fetch AMI names for each AMI ID in array_2
+    array_2 = []
+    for instance in array_1:
+        ami_id = instance['ami_id']
+        ami_name = fetch_ami_name(ec2_client, ami_id)
+        if ami_name and ami_name.startswith('amzn-ami'):
+            array_3.append({'instance_id': instance['instance_id'], 'ami_id': ami_id, 'ami_name': ami_name})
 
-    # Loop through array_1 and find matching instances in array_2
-    array_3 = []
-    for ami in array_1:
-        ami_id = ami['ImageId']
-        ami_name = ami['Name']
-        matching_instances = [instance for instance in array_2 if instance['ami_id'] == ami_id]
-        instance_ids = ', '.join(instance['instance_id'] for instance in matching_instances)
-        if instance_ids:
-            array_3.append({'ami_id': ami_id, 'ami_name': ami_name, 'instance_ids': instance_ids})
-
-    # Print the final output in a tabular column
-    print(tabulate(array_3, headers="keys"))
+    # Print the final output
+    print(tabulate(array_2, headers="keys"))
 
 if __name__ == "__main__":
     main()
