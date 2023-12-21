@@ -28,13 +28,13 @@ def main():
     # Fetch all EC2 instance IDs and respective AMI IDs
     array_1 = fetch_instance_amis(ec2_client)
 
-    # Fetch AMI names for each AMI ID in array_2
+    # Fetch AMI names for each AMI ID in array_1
     array_2 = []
     for instance in array_1:
         ami_id = instance['ami_id']
         ami_name = fetch_ami_name(ec2_client, ami_id)
         if ami_name and ami_name.startswith('amzn-ami'):
-            array_3.append({'instance_id': instance['instance_id'], 'ami_id': ami_id, 'ami_name': ami_name})
+            array_2.append({'instance_id': instance['instance_id'], 'ami_id': ami_id, 'ami_name': ami_name})
 
     # Print the final output
     print(tabulate(array_2, headers="keys"))
